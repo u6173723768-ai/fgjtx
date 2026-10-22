@@ -58,9 +58,9 @@ public final class SchematicBuilder {
         if (building) { building = false; setStatus("Builder paused · " + progress()); return; }
         if (schematic == null) { setStatus("Load a .schem file first."); notifyPlayer(status); return; }
         if (client.level == null || client.player == null) { setStatus("Join a world before starting the builder."); notifyPlayer(status); return; }
-        if (origin == null || dimensionId == null || !dimensionId.equals(client.level.dimension().location().toString())) {
+        if (origin == null || dimensionId == null || !dimensionId.equals(client.level.dimension().identifier().toString())) {
             origin = client.player.blockPosition().relative(client.player.getDirection());
-            dimensionId = client.level.dimension().location().toString();
+            dimensionId = client.level.dimension().identifier().toString();
             rebuildQueueForWorld();
         }
         building = true; MediaClient.enableModule("schematic_builder", true);
@@ -79,7 +79,7 @@ public final class SchematicBuilder {
     public void tick() {
         if (!building || !MediaClient.isModuleEnabled("schematic_builder")) return;
         if (client.level == null || client.player == null || client.gameMode == null) { setStatus("Paused · no world loaded"); return; }
-        if (!client.level.dimension().location().toString().equals(dimensionId)) {
+        if (!client.level.dimension().identifier().toString().equals(dimensionId)) {
             building = false; setStatus("Paused · dimension changed"); notifyPlayer(status); return;
         }
         if (client.screen != null) return;
