@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "media_client",
+  "version": "${version}",
+  "name": "Media Client",
+  "description": "Media Client",
+  "authors": ["Media Client"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": { "client": ["com.mediaclient.MediaClient"] },
+  "depends": {
+    "fabricloader": ">=0.18.1",
+    "minecraft": "1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
