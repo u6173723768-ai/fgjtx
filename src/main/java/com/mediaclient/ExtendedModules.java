@@ -69,17 +69,17 @@ public final class ExtendedModules {
         if (sessionStartedAt == 0L) sessionStartedAt = System.currentTimeMillis();
 
         Player player = client.player;
+        // Death screens are non-null, so handle this before the normal in-world controls.
+        if (enabled("auto_respawn") && client.screen instanceof DeathScreen) {
+            client.player.requestRespawn();
+            return;
+        }
         if (client.screen == null) {
             if (enabled("auto_sprint") && client.options.keyUp.isDown()
                     && !client.options.keyDown.isDown() && !player.isUsingItem()
                     && !player.isPassenger() && player.getFoodData().getFoodLevel() > 6
                     && !player.isSprinting()) {
                 player.setSprinting(true);
-            }
-
-            if (enabled("auto_respawn") && player.isDeadOrDying()
-                    && client.screen instanceof DeathScreen) {
-                player.requestRespawn();
             }
 
             if (enabled("auto_tool") && client.options.keyAttack.isDown()
