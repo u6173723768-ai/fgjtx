@@ -36,6 +36,7 @@ public final class MediaClient implements ClientModInitializer {
                 "key.media_client.open_gui", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, category));
 
         WorldOverlayRenderer.register();
+        ExtendedModules.register();
         ClientTickEvents.END_CLIENT_TICK.register(MediaClient::onClientTick);
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             if (ACTIVITY_DETECTOR != null) ACTIVITY_DETECTOR.resetWorldState();
@@ -50,6 +51,7 @@ public final class MediaClient implements ClientModInitializer {
         }
         if (ACTIVITY_DETECTOR != null) ACTIVITY_DETECTOR.tick();
         if (SCHEMATIC_BUILDER != null) SCHEMATIC_BUILDER.tick();
+        ExtendedModules.tick(client);
     }
 
     public static boolean isModuleEnabled(String id) {
