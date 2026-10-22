@@ -319,7 +319,7 @@ public final class MediaClickScreen extends Screen {
         if (selected == ModuleCategory.ESP) {
             if (y >= baseY + 58 && y <= baseY + 75 && x >= bx) { espFilterPage = 1 - espFilterPage; return true; }
             if (clickSetting(x,y,bx,baseY)) c.playerRange = cycle(c.playerRange,new int[]{32,48,64,96,128,192,256,384,512});
-            else if (clickSetting(x,y,bx,baseY+20)) c.containerRange = cycle(c.containerRange,new int[]{16,24,32,40,48,64,96,128,192,256});
+            else if (clickSetting(x,y,bx,baseY+20)) c.containerRange = cycle(c.containerRange,new int[]{16,24,32,40,48});
             else if (clickSetting(x,y,bx,baseY+40)) c.machineRange = cycle(c.machineRange,new int[]{16,24,32,40,48});
             else {
                 List<String> keys = new ArrayList<>((espFilterPage == 0 ? c.machineBlockToggles : c.containerBlockToggles).keySet());
