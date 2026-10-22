@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -35,6 +36,8 @@ public final class WorldOverlayRenderer {
         matrices.pushPose();
         matrices.translate(-camera.x, -camera.y, -camera.z);
         VertexConsumer lines = context.consumers().getBuffer(RenderTypes.LINES);
+        // Bound block geometry per frame so dense ESP areas cannot flood the render buffer.
+        int[] boxBudget = {256};
 
         if (MediaClient.isModuleEnabled("player_esp")) {
             double rangeSq = config.playerRange * (double) config.playerRange;
@@ -64,25 +67,51 @@ public final class WorldOverlayRenderer {
                 }
             }
         }
+        if (MediaClient.isModuleEnabled("item_esp") && boxBudget[0] > 0) {
+            double itemRange = Math.min(config.playerRange, 128);
+            double rangeSq = itemRange * itemRange;
+            int drawnItems = 0;
+            for (ItemEntity item : CLIENT.level.getEntitiesOfClass(ItemEntity.class,
+                    CLIENT.player.getBoundingBox().inflate(itemRange))) {
+                if (drawnItems >= 64 || boxBudget[0] <= 0) break;
+                if (item.isRemoved() || item.distanceToSqr(CLIENT.player) > rangeSq) continue;
+                drawBox(matrices.last(), lines, item.getBoundingBox().inflate(0.06), 0xFFFFD166);
+                drawnItems++;
+                boxBudget[0]--;
+            }
+        }
+
         if (MediaClient.isModuleEnabled("chest_esp")) {
             double rangeSq = config.containerRange * (double) config.containerRange;
             for (Map.Entry<Long, BlockState> entry : MediaClient.ACTIVITY_DETECTOR.indexedContainers().entrySet()) {
+                if (boxBudget[0] <= 0) break;
                 BlockPos pos = BlockPos.of(entry.getKey());
-                if (pos.distToCenterSqr(CLIENT.player.position()) <= rangeSq) drawBlockBox(matrices.last(), lines, pos, config.containerColor);
+                if (pos.distToCenterSqr(CLIENT.player.position()) <= rangeSq) {
+                    drawBlockBox(matrices.last(), lines, pos, config.containerColor);
+                    boxBudget[0]--;
+                }
             }
         }
         if (MediaClient.isModuleEnabled("machine_esp")) {
             double rangeSq = config.machineRange * (double) config.machineRange;
             for (Map.Entry<Long, BlockState> entry : MediaClient.ACTIVITY_DETECTOR.indexedMachines().entrySet()) {
+                if (boxBudget[0] <= 0) break;
                 BlockPos pos = BlockPos.of(entry.getKey());
-                if (pos.distToCenterSqr(CLIENT.player.position()) <= rangeSq) drawBlockBox(matrices.last(), lines, pos, config.machineColor);
+                if (pos.distToCenterSqr(CLIENT.player.position()) <= rangeSq) {
+                    drawBlockBox(matrices.last(), lines, pos, config.machineColor);
+                    boxBudget[0]--;
+                }
             }
         }
         if (MediaClient.isModuleEnabled("activity_esp")) {
             for (ActivityEvent event : MediaClient.ACTIVITY_DETECTOR.currentEvents()) {
+                if (boxBudget[0] <= 0) break;
                 BlockPos pos = event.pos();
                 double r = config.activityRadius * 2.0;
-                if (pos.distToCenterSqr(CLIENT.player.position()) <= r * r) drawBlockBox(matrices.last(), lines, pos, colorForEvent(event, config));
+                if (pos.distToCenterSqr(CLIENT.player.position()) <= r * r) {
+                    drawBlockBox(matrices.last(), lines, pos, colorForEvent(event, config));
+                    boxBudget[0]--;
+                }
             }
         }
         matrices.popPose();
