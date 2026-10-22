@@ -48,18 +48,22 @@ public final class ActivityDetector {
         MediaConfig config = MediaConfig.get();
         boolean detectorOn = MediaClient.isModuleEnabled("activity_detector");
         boolean highlightOn = MediaClient.isModuleEnabled("activity_esp");
+        boolean playerAlertOn = MediaClient.isModuleEnabled("nearby_player_alerts");
+        boolean growthWatchOn = MediaClient.isModuleEnabled("amethyst_growth_watch")
+                || MediaClient.isModuleEnabled("kelp_growth_watch")
+                || MediaClient.isModuleEnabled("crop_growth_watch");
         boolean espScanOn = MediaClient.isModuleEnabled("chest_esp") || MediaClient.isModuleEnabled("machine_esp");
-        if (!detectorOn && !highlightOn && !espScanOn) {
+        if (!detectorOn && !highlightOn && !playerAlertOn && !growthWatchOn && !espScanOn) {
             lastSnapshot.clear(); inRangePlayers.clear(); events.clear();
             indexedContainers = new HashMap<>(); indexedMachines = new HashMap<>();
             espBuildingContainers.clear(); espBuildingMachines.clear(); espScanInProgress = false;
             lastEspChunkX = Integer.MIN_VALUE; lastEspChunkZ = Integer.MIN_VALUE; return;
         }
         removeExpiredEvents();
-        if (detectorOn) updatePlayerPresence(config);
+        if (detectorOn || playerAlertOn) updatePlayerPresence(config);
         if (++tickCounter >= effectiveInterval(config)) {
             tickCounter = 0;
-            if (detectorOn || highlightOn) scanNearbyBlocks(config);
+            if (detectorOn || highlightOn || growthWatchOn) scanNearbyBlocks(config);
         }
         if (espScanOn) {
             int chunkX = client.player.blockPosition().getX() >> 4;
@@ -78,7 +82,8 @@ public final class ActivityDetector {
     }
 
     private int effectiveInterval(MediaConfig config) {
-        return MediaClient.isModuleEnabled("performance_mode") ? Math.max(config.scanIntervalTicks, 40) : config.scanIntervalTicks;
+        return MediaClient.isModuleEnabled("performance_mode") || MediaClient.isModuleEnabled("adaptive_scan")
+                ? Math.max(config.scanIntervalTicks, 40) : config.scanIntervalTicks;
     }
 
     private void updatePlayerPresence(MediaConfig config) {
@@ -156,16 +161,27 @@ public final class ActivityDetector {
     private void classifyChange(BlockPos pos, BlockState before, BlockState after, MediaConfig config) {
         boolean detectorOn = MediaClient.isModuleEnabled("activity_detector");
         boolean highlightOn = MediaClient.isModuleEnabled("activity_esp");
-        if (!detectorOn && !highlightOn) return;
+        boolean amethystWatch = MediaClient.isModuleEnabled("amethyst_growth_watch");
+        boolean kelpWatch = MediaClient.isModuleEnabled("kelp_growth_watch");
+        boolean cropWatch = MediaClient.isModuleEnabled("crop_growth_watch");
+        if (!detectorOn && !highlightOn && !amethystWatch && !kelpWatch && !cropWatch) return;
         Block oldBlock = before.getBlock(), newBlock = after.getBlock();
         String oldId = blockId(oldBlock), newId = blockId(newBlock), event = null, eventKey = null;
-        if (Boolean.TRUE.equals(config.eventToggles.get("amethyst_growth")) && (isAmethyst(oldBlock) || isAmethyst(newBlock))) { event = "Amethyst changed"; eventKey = "amethyst_growth"; }
-        else if (Boolean.TRUE.equals(config.eventToggles.get("kelp_growth")) && (oldId.contains("kelp") || newId.contains("kelp"))) { event = "Kelp growth/change"; eventKey = "kelp_growth"; }
-        else if (Boolean.TRUE.equals(config.eventToggles.get("crop_growth")) && oldBlock == newBlock && hasAgeProperty(before) && !before.equals(after)) { event = "Crop/farm state changed"; eventKey = "crop_growth"; }
-        else if (Boolean.TRUE.equals(config.eventToggles.get("container_open")) && oldBlock == newBlock && isContainer(before) && propertyChanged(before, after, "open")) { event = "Container open state changed"; eventKey = "container_open"; }
-        else if (Boolean.TRUE.equals(config.eventToggles.get("machine_activity")) && (isMachine(before) || isMachine(after))) { event = "Machine state changed"; eventKey = "machine_activity"; }
-        else if (Boolean.TRUE.equals(config.eventToggles.get("door_activity")) && (oldId.contains("door") || oldId.contains("trapdoor") || newId.contains("door") || newId.contains("trapdoor"))) { event = "Door/trapdoor changed"; eventKey = "door_activity"; }
-        else if (Boolean.TRUE.equals(config.eventToggles.get("block_place_break")) && before.isAir() != after.isAir()) { event = after.isAir() ? "Block removed" : "Block placed/updated"; eventKey = "block_place_break"; }
+        if (amethystWatch && Boolean.TRUE.equals(config.eventToggles.get("amethyst_growth")) && isAmethystGrowth(before, after)) {
+            event = "Amethyst bud grew"; eventKey = "amethyst_growth";
+        } else if (kelpWatch && Boolean.TRUE.equals(config.eventToggles.get("kelp_growth")) && isKelpGrowth(pos, before, after)) {
+            event = "Kelp grew"; eventKey = "kelp_growth";
+        } else if (cropWatch && Boolean.TRUE.equals(config.eventToggles.get("crop_growth")) && isAgeIncrease(before, after)) {
+            event = "Crop grew"; eventKey = "crop_growth";
+        } else if (detectorOn && Boolean.TRUE.equals(config.eventToggles.get("container_open")) && oldBlock == newBlock && isContainer(before) && propertyChanged(before, after, "open")) {
+            event = "Container open state changed"; eventKey = "container_open";
+        } else if (detectorOn && Boolean.TRUE.equals(config.eventToggles.get("machine_activity")) && (isMachine(before) || isMachine(after))) {
+            event = "Machine state changed"; eventKey = "machine_activity";
+        } else if (detectorOn && Boolean.TRUE.equals(config.eventToggles.get("door_activity")) && (oldId.contains("door") || oldId.contains("trapdoor") || newId.contains("door") || newId.contains("trapdoor"))) {
+            event = "Door/trapdoor changed"; eventKey = "door_activity";
+        } else if (detectorOn && Boolean.TRUE.equals(config.eventToggles.get("block_place_break")) && before.isAir() != after.isAir()) {
+            event = after.isAir() ? "Block removed" : "Block placed/updated"; eventKey = "block_place_break";
+        }
         if (event != null && Boolean.TRUE.equals(config.eventToggles.get(eventKey))) {
             String id = after.isAir() ? oldId : newId;
             addEvent(pos, event + " · " + id, id);
@@ -196,8 +212,10 @@ public final class ActivityDetector {
     private void removeExpiredEvents() { long now = System.currentTimeMillis(); events.removeIf(e -> e.expired(now)); }
     public java.util.List<ActivityEvent> currentEvents() { removeExpiredEvents(); return new ArrayList<>(events); }
     public void clearEvents() { events.clear(); }
-    public Map<Long, BlockState> indexedContainers() { return Map.copyOf(indexedContainers); }
-    public Map<Long, BlockState> indexedMachines() { return Map.copyOf(indexedMachines); }
+    // These maps are swapped only when a background-style scan finishes, so the renderer
+    // can read the finished snapshot directly without allocating a full copy every frame.
+    public Map<Long, BlockState> indexedContainers() { return indexedContainers; }
+    public Map<Long, BlockState> indexedMachines() { return indexedMachines; }
 
     public void resetWorldState() {
         lastSnapshot.clear(); indexedContainers.clear(); indexedMachines.clear(); inRangePlayers.clear(); events.clear();
@@ -228,6 +246,44 @@ public final class ActivityDetector {
         for (Property<?> property : before.getProperties()) if (property.getName().equals(propertyName) && after.hasProperty(property))
             return !java.util.Objects.equals(before.getValues().get(property), after.getValues().get(property));
         return false;
+    }
+
+    private boolean isKelpGrowth(BlockPos pos, BlockState before, BlockState after) {
+        if (!before.isAir()) return false;
+        String afterId = blockId(after.getBlock());
+        if (!afterId.equals("kelp") && !afterId.equals("kelp_plant")) return false;
+        if (client.level == null) return false;
+        String belowId = blockId(client.level.getBlockState(pos.below()).getBlock());
+        return belowId.equals("kelp") || belowId.equals("kelp_plant");
+    }
+
+    private static boolean isAmethystGrowth(BlockState before, BlockState after) {
+        int oldStage = amethystStage(before.getBlock());
+        int newStage = amethystStage(after.getBlock());
+        return oldStage > 0 && newStage > oldStage;
+    }
+
+    private static int amethystStage(Block block) {
+        if (block == Blocks.SMALL_AMETHYST_BUD) return 1;
+        if (block == Blocks.MEDIUM_AMETHYST_BUD) return 2;
+        if (block == Blocks.LARGE_AMETHYST_BUD) return 3;
+        if (block == Blocks.AMETHYST_CLUSTER) return 4;
+        return 0;
+    }
+
+    private static boolean isAgeIncrease(BlockState before, BlockState after) {
+        if (before.getBlock() != after.getBlock() || before.equals(after)) return false;
+        Integer oldAge = ageValue(before), newAge = ageValue(after);
+        return oldAge != null && newAge != null && newAge > oldAge;
+    }
+
+    private static Integer ageValue(BlockState state) {
+        for (Property<?> property : state.getProperties()) {
+            if (!property.getName().equals("age")) continue;
+            Object value = state.getValues().get(property);
+            if (value instanceof Number number) return number.intValue();
+        }
+        return null;
     }
 
     public static boolean isAmethyst(Block block) {
