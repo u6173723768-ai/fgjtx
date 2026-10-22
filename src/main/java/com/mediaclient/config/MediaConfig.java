@@ -142,7 +142,7 @@ public final class MediaConfig {
     }
 
     public void clamp() {
-        playerRange = clamp(playerRange, 4, 256);
+        playerRange = clamp(playerRange, 4, 512);
         containerRange = clamp(containerRange, 4, 48);
         machineRange = clamp(machineRange, 4, 48);
         activityRadius = clamp(activityRadius, 3, 20);
