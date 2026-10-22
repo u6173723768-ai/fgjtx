@@ -1,24 +1,42 @@
 name: Build Media Client
+
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [ "main", "full-media-client" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Restore Media Client logo texture
+        run: |
+          mkdir -p src/main/resources/assets/media_client/textures/gui
+          base64 --decode tools/media-logo.png.b64 > src/main/resources/assets/media_client/textures/gui/media_logo.png
+          file src/main/resources/assets/media_client/textures/gui/media_logo.png
+      - name: Set up Gradle 9.2.1
+        uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.2.1'
-      - run: gradle --no-daemon clean build --stacktrace
-      - run: ls -lah build/libs
-      - uses: actions/upload-artifact@v4
+      - name: Compile and remap Fabric mod
+        run: gradle --no-daemon clean build --stacktrace
+      - name: Verify installable JAR contains Fabric mod metadata
+        run: |
+          test -s build/libs/media-client-1.0.0.jar
+          unzip -l build/libs/media-client-1.0.0.jar | grep -q '^.*fabric.mod.json$'
+      - name: Show build output
+        run: ls -lah build/libs
+      - name: Upload Media Client jar
+        uses: actions/upload-artifact@v4
         with:
           name: media-client-jar
           path: build/libs/media-client-1.0.0.jar
