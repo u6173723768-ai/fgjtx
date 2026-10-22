@@ -264,7 +264,7 @@ public final class MediaClickScreen extends Screen {
         g.fill(x + 1, y + 1, x + 5, y + 4, ACCENT);
     }
     private void drawLogo(GuiGraphics g, int x, int y, int size) {
-        g.blit(RenderPipelines.GUI_TEXTURED, LOGO_TEXTURE, x, y, 0.0F, 0.0F, size, size, 256, 256);
+        g.blit(RenderPipelines.GUI_TEXTURED, LOGO_TEXTURE, x, y, 0.0F, 0.0F, size, size, 128, 128);
     }
     private void drawAvatar(GuiGraphics g, int x, int y) {
         g.fill(x, y, x + 15, y + 15, ACCENT_WASH);

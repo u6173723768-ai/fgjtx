@@ -9,7 +9,7 @@ import com.mediaclient.config.MediaConfig;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -34,7 +34,7 @@ public final class WorldOverlayRenderer {
         PoseStack matrices = context.matrices();
         matrices.pushPose();
         matrices.translate(-camera.x, -camera.y, -camera.z);
-        VertexConsumer lines = context.consumers().getBuffer(RenderType.lines());
+        VertexConsumer lines = context.consumers().getBuffer(RenderTypes.LINES);
 
         if (MediaClient.isModuleEnabled("player_esp")) {
             double rangeSq = config.playerRange * (double) config.playerRange;

@@ -5,7 +5,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.Tag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -21,9 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/** Sponge Schematic v2/v3 palette reader. Air entries are ignored to prevent destructive clearing. */
+/** Sponge Schematic v2/v3 palette reader; air entries are skipped to avoid destructive clearing. */
 public final class SchematicLoader {
-    private SchematicLoader() { }
+    private SchematicLoader() {}
 
     public static SchematicData load(Path path) throws IOException {
         if (Files.size(path) > 32L * 1024 * 1024) throw new IOException("Schematic file is too large (maximum compressed size is 32 MiB).");
@@ -33,18 +32,26 @@ public final class SchematicLoader {
         } catch (RuntimeException exception) {
             throw new IOException("Schematic NBT is invalid or exceeds the 64 MiB safety limit.", exception);
         }
-        CompoundTag blocksTag = root.contains("Blocks", Tag.TAG_COMPOUND) ? root.getCompound("Blocks") : root;
-        int width = positiveDimension(root, blocksTag, "Width");
-        int height = positiveDimension(root, blocksTag, "Height");
-        int length = positiveDimension(root, blocksTag, "Length");
+        CompoundTag blocks = root.getCompoundOrEmpty("Blocks");
+        if (blocks.isEmpty()) blocks = root;
+        int width = readDimension(root, blocks, "Width");
+        int height = readDimension(root, blocks, "Height");
+        int length = readDimension(root, blocks, "Length");
         long volume = (long) width * height * length;
-        if (width < 1 || height < 1 || length < 1 || volume > 2_000_000L) throw new IOException("Invalid or oversized schematic dimensions (max 2,000,000 blocks).");
-        CompoundTag palette = blocksTag.contains("Palette", Tag.TAG_COMPOUND) ? blocksTag.getCompound("Palette") : root.getCompound("Palette");
-        byte[] data = blocksTag.contains("Data", Tag.TAG_BYTE_ARRAY) ? blocksTag.getByteArray("Data") : blocksTag.getByteArray("BlockData");
-        if (data.length == 0) data = root.getByteArray("BlockData");
+        if (width < 1 || height < 1 || length < 1 || volume > 2_000_000L)
+            throw new IOException("Invalid or oversized schematic dimensions (max 2,000,000 blocks).");
+
+        CompoundTag palette = blocks.getCompoundOrEmpty("Palette");
+        if (palette.isEmpty()) palette = root.getCompoundOrEmpty("Palette");
+        byte[] data = blocks.getByteArray("Data").orElseGet(() -> blocks.getByteArray("BlockData").orElse(new byte[0]));
+        if (data.length == 0) data = root.getByteArray("BlockData").orElse(new byte[0]);
         if (palette.isEmpty() || data.length == 0) throw new IOException("This schematic has no Sponge Palette/BlockData; unsupported format.");
+
         Map<Integer, BlockState> states = new HashMap<>();
-        for (String paletteEntry : palette.getAllKeys()) states.put(palette.getInt(paletteEntry), parseState(paletteEntry));
+        for (String paletteEntry : palette.keySet()) {
+            int paletteIndex = palette.getInt(paletteEntry).orElse(-1);
+            if (paletteIndex >= 0) states.put(paletteIndex, parseState(paletteEntry));
+        }
         List<SchematicData.Placement> placements = new ArrayList<>((int) Math.min(volume, 250_000));
         int offset = 0;
         for (int index = 0; index < volume; index++) {
@@ -62,9 +69,16 @@ public final class SchematicLoader {
         return new SchematicData(width, height, length, List.copyOf(placements));
     }
 
-    private static int positiveDimension(CompoundTag root, CompoundTag blocks, String key) {
-        CompoundTag source = blocks.contains(key, Tag.TAG_SHORT) || blocks.contains(key, Tag.TAG_INT) ? blocks : root;
-        return source.contains(key, Tag.TAG_SHORT) ? source.getShort(key) & 0xFFFF : source.getInt(key);
+    private static int readDimension(CompoundTag root, CompoundTag blocks, String key) throws IOException {
+        Optional<Short> shortValue = blocks.getShort(key);
+        if (shortValue.isPresent()) return Short.toUnsignedInt(shortValue.get());
+        Optional<Integer> intValue = blocks.getInt(key);
+        if (intValue.isPresent()) return intValue.get();
+        shortValue = root.getShort(key);
+        if (shortValue.isPresent()) return Short.toUnsignedInt(shortValue.get());
+        intValue = root.getInt(key);
+        if (intValue.isPresent()) return intValue.get();
+        throw new IOException("Schematic is missing dimension " + key + '.');
     }
 
     private static BlockState parseState(String text) {
