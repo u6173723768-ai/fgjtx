@@ -52,7 +52,7 @@ public final class ExtendedModules {
         KeyMapping.Category category = KeyMapping.Category.register(
                 Identifier.fromNamespaceAndPath("media_client", "utilities"));
         zoomKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
-                "key.media_client.zoom", net.minecraft.client.InputType.KEYSYM, GLFW.GLFW_KEY_C, category));
+                "key.media_client.zoom", com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_C, category));
         HudElementRegistry.addLast(
                 Identifier.fromNamespaceAndPath("media_client", "utility_hud"),
                 (graphics, tickCounter) -> renderHud(graphics));
