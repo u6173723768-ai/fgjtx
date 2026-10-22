@@ -2,7 +2,9 @@ package com.mediaclient;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
+import org.lwjgl.glfw.GLFW;
 
 public final class MediaScreen extends Screen {
     public MediaScreen() {
@@ -15,15 +17,15 @@ public final class MediaScreen extends Screen {
         int left = this.width / 2 - 180;
         int top = this.height / 2 - 120;
         graphics.fill(left, top, left + 360, top + 240, 0xE5101018);
+        graphics.fill(left, top, left + 360, top + 2, 0xFF9C4DFF);
         graphics.drawString(this.font, Component.literal("MEDIA CLIENT"), left + 20, top + 20, 0xFFB46CFF, true);
         graphics.drawString(this.font, Component.literal("Right Shift • Toggle GUI"), left + 20, top + 45, 0xFFE0E0E8);
         graphics.drawString(this.font, Component.literal("Visual / ESP / World / Automation"), left + 20, top + 80, 0xFFB8B8C8);
     }
 
     @Override
-    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-        if (event.key() == com.mojang.blaze3d.platform.InputConstants.KEYSYM.getValue()
-                && event.scancode() == org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_SHIFT) {
+    public boolean keyPressed(KeyEvent event) {
+        if (event.key() == GLFW.GLFW_KEY_RIGHT_SHIFT) {
             this.minecraft.setScreen(null);
             return true;
         }
