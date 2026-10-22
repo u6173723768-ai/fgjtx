@@ -43,7 +43,8 @@ public final class SchematicLoader {
 
         CompoundTag palette = blocks.getCompoundOrEmpty("Palette");
         if (palette.isEmpty()) palette = root.getCompoundOrEmpty("Palette");
-        byte[] data = blocks.getByteArray("Data").orElseGet(() -> blocks.getByteArray("BlockData").orElse(new byte[0]));
+        byte[] data = blocks.getByteArray("Data").orElse(new byte[0]);
+        if (data.length == 0) data = blocks.getByteArray("BlockData").orElse(new byte[0]);
         if (data.length == 0) data = root.getByteArray("BlockData").orElse(new byte[0]);
         if (palette.isEmpty() || data.length == 0) throw new IOException("This schematic has no Sponge Palette/BlockData; unsupported format.");
 
