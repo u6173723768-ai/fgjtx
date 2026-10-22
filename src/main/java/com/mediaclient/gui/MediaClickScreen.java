@@ -63,7 +63,8 @@ public final class MediaClickScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float delta) {
-        renderBackground(g, mouseX, mouseY, delta);
+        // Do not call renderBackground here: vanilla applies the blur once per frame and this
+        // screen is drawn from a render path that may already have consumed that blur pass.
         panelX = (width - PANEL_W) / 2;
         panelY = Math.max(0, (height - PANEL_H) / 2);
         int px = panelX, py = panelY, sx = settingsX(), cx = contentX(), right = panelX + PANEL_W;
@@ -272,14 +273,14 @@ public final class MediaClickScreen extends Screen {
         g.fill(x + 3, y + 9, x + 12, y + 13, ACCENT);
     }
     private String categoryGlyph(ModuleCategory category) {
-        return switch (category) { case COMBAT -> "C"; case PLAYER -> "P"; case VISUAL -> "V"; case WORLD -> "W"; case ESP -> "E"; case AUTOMATION -> "A"; case PERFORMANCE -> "F"; case MISC -> "M"; };
+        return switch (category) { case COMBAT -> "C"; case PLAYER -> "P"; case VISUAL -> "V"; case WORLD -> "W"; case ESP -> "E"; case AUTOMATION -> "A"; case PERFORMANCE -> "F"; case MISC -> "D"; };
     }
     private String categorySubtitle(ModuleCategory category) {
         return switch (category) {
             case COMBAT -> "Combat options and module controls."; case PLAYER -> "Player appearance and filtering.";
             case VISUAL -> "Colors and on-screen presentation."; case WORLD -> "Detectable activity and world changes.";
             case ESP -> "Players, containers, machines and activity."; case AUTOMATION -> "Schematic loading and cautious placement.";
-            case PERFORMANCE -> "Tune background work and scan cadence."; case MISC -> "Notifications and general preferences.";
+            case PERFORMANCE -> "Tune background work and scan cadence."; case MISC -> "DonutSMP helpers, session and server stats.";
         };
     }
     private String ellipsize(String text, int maxWidth) {
@@ -317,8 +318,8 @@ public final class MediaClickScreen extends Screen {
         MediaConfig c = MediaConfig.get(); int bx = settingsX() + 10, baseY = settingsBaseY();
         if (selected == ModuleCategory.ESP) {
             if (y >= baseY + 58 && y <= baseY + 75 && x >= bx) { espFilterPage = 1 - espFilterPage; return true; }
-            if (clickSetting(x,y,bx,baseY)) c.playerRange = cycle(c.playerRange,new int[]{32,48,64,96,128});
-            else if (clickSetting(x,y,bx,baseY+20)) c.containerRange = cycle(c.containerRange,new int[]{16,24,32,40,48});
+            if (clickSetting(x,y,bx,baseY)) c.playerRange = cycle(c.playerRange,new int[]{32,48,64,96,128,192,256,384,512});
+            else if (clickSetting(x,y,bx,baseY+20)) c.containerRange = cycle(c.containerRange,new int[]{16,24,32,40,48,64,96,128,192,256});
             else if (clickSetting(x,y,bx,baseY+40)) c.machineRange = cycle(c.machineRange,new int[]{16,24,32,40,48});
             else {
                 List<String> keys = new ArrayList<>((espFilterPage == 0 ? c.machineBlockToggles : c.containerBlockToggles).keySet());
