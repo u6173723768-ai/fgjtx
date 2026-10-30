@@ -2,7 +2,8 @@ package com.apexsmp.access;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -22,9 +23,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class ApexAccessPlugin extends JavaPlugin implements Listener {
     private static final String DEFAULT_ALLOWED_PLAYER = "Hannes_mini";
 
-    // Reads from the async pre-login thread, so use a concurrent set.
+    // This set is checked on Paper's asynchronous pre-login thread.
     private final Set<String> allowedNames = ConcurrentHashMap.newKeySet();
-    // Only accessed from the server thread.
+    // This set is only accessed on the server thread.
     private final Set<String> pendingOps = new HashSet<>();
 
     @Override
@@ -34,8 +35,14 @@ public final class ApexAccessPlugin extends JavaPlugin implements Listener {
         ensureOwnerAllowed();
 
         getServer().getPluginManager().registerEvents(this, this);
-        getLogger().info("APEX Access enabled. " + allowedNames.size() + " player(s) are allowlisted.");
-        getLogger().info("Only existing server operators can use //op <username>.");
+
+        if (getCommand("allow") == null) {
+            throw new IllegalStateException("The /allow command is missing from plugin.yml");
+        }
+        getCommand("allow").setExecutor(this::handleAllow);
+
+        getLogger().info("APEX Access 1.0.1 enabled. " + allowedNames.size() + " player(s) are allowlisted.");
+        getLogger().info("Use /allow <username> to allow a player; //op <username> also grants operator status.");
     }
 
     private void loadAccessLists() {
@@ -63,13 +70,43 @@ public final class ApexAccessPlugin extends JavaPlugin implements Listener {
         }
     }
 
+    private boolean handleAllow(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player player) || !player.isOp()) {
+            sender.sendMessage(ChatColor.RED + "Only an existing server operator can use /allow.");
+            return true;
+        }
+
+        if (args.length != 1) {
+            sender.sendMessage(ChatColor.YELLOW + "Usage: /allow <username>");
+            return true;
+        }
+
+        String targetName = args[0];
+        if (!isValidUsername(targetName)) {
+            sender.sendMessage(ChatColor.RED + "Invalid Minecraft username. Use 1-16 letters, numbers, or underscores.");
+            return true;
+        }
+
+        if (addAllowed(targetName)) {
+            sender.sendMessage(ChatColor.GREEN + "Allowed " + targetName + " to join APEX SMP.");
+        } else {
+            sender.sendMessage(ChatColor.YELLOW + targetName + " is already allowlisted.");
+        }
+
+        Player target = Bukkit.getPlayerExact(targetName);
+        if (target != null) {
+            target.sendMessage(ChatColor.GREEN + "You have been added to the APEX SMP allowlist.");
+        }
+        return true;
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
         String normalized = normalize(event.getName());
         if (!allowedNames.contains(normalized)) {
             event.disallow(
                     AsyncPlayerPreLoginEvent.Result.KICK_WHITELIST,
-                    ChatColor.RED + "You are not allowlisted on APEX SMP. Ask an operator to add you."
+                    ChatColor.RED + "You are not allowlisted on APEX SMP. Ask an operator to add you with /allow <username>."
             );
         }
     }
@@ -152,6 +189,7 @@ public final class ApexAccessPlugin extends JavaPlugin implements Listener {
         if (added) {
             List<String> names = new ArrayList<>(getConfig().getStringList("allowed-players"));
             names.add(name);
+            names.sort(String.CASE_INSENSITIVE_ORDER);
             getConfig().set("allowed-players", names);
             saveConfig();
         }
