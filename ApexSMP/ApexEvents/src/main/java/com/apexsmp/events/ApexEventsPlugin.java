@@ -76,7 +76,7 @@ public final class ApexEventsPlugin extends JavaPlugin implements Listener {
         getServer().getScheduler().runTaskTimer(this, this::updateEventState, 1L, 20L);
         getServer().getScheduler().runTaskTimer(this, this::processOneQueuedChunk, 1L, 1L);
 
-        getLogger().info("APEX Events enabled for Paper 1.21.11.");
+        getLogger().info("APEX Events 1.0.2 enabled for Paper 1.21.11.");
     }
 
     @Override
@@ -90,8 +90,8 @@ public final class ApexEventsPlugin extends JavaPlugin implements Listener {
     }
 
     private boolean handleStart(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("apexevents.admin")) {
-            sender.sendMessage(ChatColor.RED + "You do not have permission to start the event.");
+        if (!(sender instanceof Player player) || !player.isOp()) {
+            sender.sendMessage(ChatColor.RED + "Only an actual server OP can use /start.");
             return true;
         }
         if (args.length != 0) {
@@ -157,6 +157,12 @@ public final class ApexEventsPlugin extends JavaPlugin implements Listener {
     }
 
     private void resetEvent(CommandSender sender) {
+        resetForFreshWorld();
+        Bukkit.broadcastMessage(ChatColor.RED + "APEX SMP event has been reset. PvP is disabled and the border is small again.");
+        sender.sendMessage(ChatColor.GREEN + "Event reset. /start is ready.");
+    }
+
+    public void resetForFreshWorld() {
         getConfig().set("event.started-at", 0L);
         getConfig().set("event.pvp-announced", false);
         getConfig().set("event.portals-announced", false);
@@ -168,9 +174,6 @@ public final class ApexEventsPlugin extends JavaPlugin implements Listener {
         applyWorldBorder(waitingBorderSize());
         lastBossBarSecond = Long.MIN_VALUE;
         updateBossBar(System.currentTimeMillis());
-
-        Bukkit.broadcastMessage(ChatColor.RED + "APEX SMP event has been reset. PvP is disabled and the border is small again.");
-        sender.sendMessage(ChatColor.GREEN + "Event reset. /start is ready.");
     }
 
     private void scanLoadedChunks(CommandSender sender) {
