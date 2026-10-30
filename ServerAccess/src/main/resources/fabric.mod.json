@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "serveraccess",
+  "version": "${version}",
+  "name": "Server Access",
+  "description": "A persistent server allowlist with a pre-authorized owner and /allow commands.",
+  "authors": ["ServerAccess"],
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "dev.serveraccess.AccessControlMod"
+    ]
+  },
+  "mixins": [
+    "serveraccess.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
