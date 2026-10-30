@@ -34,7 +34,7 @@ public final class ApexEventsPlugin extends JavaPlugin implements Listener {
     private static final long COUNTDOWN_MILLIS = 2L * 24L * 60L * 60L * 1000L;
     private static final long PVP_DELAY_MILLIS = 30L * 60L * 1000L;
     private static final double DEFAULT_WAITING_BORDER = 16.0;
-    private static final double DEFAULT_EVENT_BORDER = 30_000_000.0;
+    private static final double DEFAULT_EVENT_BORDER = 100_000.0;
 
     private final ArrayDeque<Long> scanQueue = new ArrayDeque<>();
     private final Set<Long> queuedChunks = new HashSet<>();
@@ -46,6 +46,7 @@ public final class ApexEventsPlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        migrateLegacyEventBorder();
         bossBar = Bukkit.createBossBar(
                 ChatColor.DARK_PURPLE + "APEX SMP | Waiting for /start",
                 BarColor.BLUE,
@@ -277,6 +278,15 @@ public final class ApexEventsPlugin extends JavaPlugin implements Listener {
 
     private double eventBorderSize() {
         return getConfig().getDouble("border.event-size", DEFAULT_EVENT_BORDER);
+    }
+
+    private void migrateLegacyEventBorder() {
+        double configuredSize = getConfig().getDouble("border.event-size", DEFAULT_EVENT_BORDER);
+        if (Double.compare(configuredSize, 30_000_000.0) == 0) {
+            getConfig().set("border.event-size", DEFAULT_EVENT_BORDER);
+            saveConfig();
+            getLogger().info("Updated the old 30,000,000-block event border setting to 100,000 blocks.");
+        }
     }
 
     @EventHandler
