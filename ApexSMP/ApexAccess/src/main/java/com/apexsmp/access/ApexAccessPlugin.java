@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class ApexAccessPlugin extends JavaPlugin implements Listener {
     private static final String DEFAULT_ALLOWED_PLAYER = "Hannes_mini";
+    private static final String SECOND_DEFAULT_ALLOWED_PLAYER = "Space780";
 
     // This set is checked on Paper's asynchronous pre-login thread.
     private final Set<String> allowedNames = ConcurrentHashMap.newKeySet();
@@ -32,7 +33,7 @@ public final class ApexAccessPlugin extends JavaPlugin implements Listener {
     public void onEnable() {
         saveDefaultConfig();
         loadAccessLists();
-        ensureOwnerAllowed();
+        ensureCorePlayersAllowed();
 
         getServer().getPluginManager().registerEvents(this, this);
 
@@ -41,7 +42,7 @@ public final class ApexAccessPlugin extends JavaPlugin implements Listener {
         }
         getCommand("allow").setExecutor(this::handleAllow);
 
-        getLogger().info("APEX Access 1.0.1 enabled. " + allowedNames.size() + " player(s) are allowlisted.");
+        getLogger().info("APEX Access 1.0.2 enabled. " + allowedNames.size() + " player(s) are allowlisted.");
         getLogger().info("Use /allow <username> to allow a player; //op <username> also grants operator status.");
     }
 
@@ -61,13 +62,42 @@ public final class ApexAccessPlugin extends JavaPlugin implements Listener {
         }
     }
 
-    private void ensureOwnerAllowed() {
+    private void ensureCorePlayersAllowed() {
+        boolean changed = false;
+        List<String> names = new ArrayList<>(getConfig().getStringList("allowed-players"));
         if (allowedNames.add(normalize(DEFAULT_ALLOWED_PLAYER))) {
-            List<String> names = new ArrayList<>(getConfig().getStringList("allowed-players"));
             names.add(DEFAULT_ALLOWED_PLAYER);
+            changed = true;
+        }
+        if (allowedNames.add(normalize(SECOND_DEFAULT_ALLOWED_PLAYER))) {
+            names.add(SECOND_DEFAULT_ALLOWED_PLAYER);
+            changed = true;
+        }
+        if (changed) {
+            names.sort(String.CASE_INSENSITIVE_ORDER);
             getConfig().set("allowed-players", names);
             saveConfig();
         }
+    }
+
+    public void resetAllowlistForFreshWorld() {
+        allowedNames.clear();
+        pendingOps.clear();
+
+        allowedNames.add(normalize(DEFAULT_ALLOWED_PLAYER));
+        allowedNames.add(normalize(SECOND_DEFAULT_ALLOWED_PLAYER));
+
+        List<String> names = new ArrayList<>();
+        names.add(DEFAULT_ALLOWED_PLAYER);
+        names.add(SECOND_DEFAULT_ALLOWED_PLAYER);
+        names.sort(String.CASE_INSENSITIVE_ORDER);
+
+        getConfig().set("allowed-players", names);
+        getConfig().set("pending-ops", List.of());
+        saveConfig();
+
+        getLogger().info("Allowlist reset. Only " + DEFAULT_ALLOWED_PLAYER + " and "
+                + SECOND_DEFAULT_ALLOWED_PLAYER + " remain allowed.");
     }
 
     private boolean handleAllow(CommandSender sender, Command command, String label, String[] args) {
