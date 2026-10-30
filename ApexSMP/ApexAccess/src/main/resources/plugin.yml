@@ -1,6 +1,15 @@
 name: APEXAccess
-version: 1.0.0
+version: 1.0.1
 main: com.apexsmp.access.ApexAccessPlugin
 api-version: '1.21.11'
-description: APEX SMP allowlist and operator promotion using //op.
+description: APEX SMP allowlist and operator promotion using /allow and //op.
 author: APEX SMP
+commands:
+  allow:
+    description: Add a player to the APEX SMP allowlist.
+    usage: /allow <username>
+    permission: apexaccess.allow
+permissions:
+  apexaccess.allow:
+    description: Allows adding players to the APEX SMP allowlist.
+    default: op
