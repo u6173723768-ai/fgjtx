@@ -1,3 +1,8 @@
 base {
     archivesName = 'APEX-Events'
 }
+
+version = '1.0.1'
+
+//
+}
