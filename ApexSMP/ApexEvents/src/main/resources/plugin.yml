@@ -1,5 +1,5 @@
 name: APEXEvents
-version: 1.0.1
+version: 1.0.2
 main: com.apexsmp.events.ApexEventsPlugin
 api-version: '1.21.11'
 description: APEX SMP countdown, PvP unlock, border event and End portal activation.
