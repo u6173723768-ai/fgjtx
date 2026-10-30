@@ -1,0 +1,37 @@
+name: Build End Countdown Mod
+on:
+  push:
+    branches: [build-end-countdown]
+    paths:
+      - "EndCountdown/**"
+      - ".github/workflows/build-end-countdown.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.2.1"
+      - name: Build Fabric mod
+        working-directory: EndCountdown
+        run: gradle --no-daemon clean build --stacktrace
+      - name: Verify jar
+        run: |
+          test -f EndCountdown/build/libs/end-countdown-1.0.0.jar
+          jar tf EndCountdown/build/libs/end-countdown-1.0.0.jar | grep -E 'fabric.mod.json|dev/worldevent/EndCountdownMod.class|dev/worldevent/EventState.class'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: end-countdown-fabric-1.21.11
+          path: EndCountdown/build/libs/end-countdown-1.0.0.jar
+          if-no-files-found: error
+          retention-days: 14
