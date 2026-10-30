@@ -1,0 +1,41 @@
+name: Build APEX SMP Paper Plugins
+on:
+  push:
+    branches: [apex-smp-paper]
+    paths:
+      - "ApexSMP/**"
+      - ".github/workflows/build-apex-smp.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.2.1"
+      - name: Build both plugins
+        working-directory: ApexSMP
+        run: gradle --no-daemon clean :ApexEvents:build :ApexAccess:build --stacktrace
+      - name: Verify plugin jars
+        run: |
+          test -f ApexSMP/ApexEvents/build/libs/APEX-Events-1.0.0.jar
+          test -f ApexSMP/ApexAccess/build/libs/APEX-Access-1.0.0.jar
+          jar tf ApexSMP/ApexEvents/build/libs/APEX-Events-1.0.0.jar | grep -E 'plugin.yml|com/apexsmp/events/ApexEventsPlugin.class'
+          jar tf ApexSMP/ApexAccess/build/libs/APEX-Access-1.0.0.jar | grep -E 'plugin.yml|config.yml|com/apexsmp/access/ApexAccessPlugin.class'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apex-smp-paper-1.21.11
+          path: |
+            ApexSMP/ApexEvents/build/libs/APEX-Events-1.0.0.jar
+            ApexSMP/ApexAccess/build/libs/APEX-Access-1.0.0.jar
+          if-no-files-found: error
+          retention-days: 14
