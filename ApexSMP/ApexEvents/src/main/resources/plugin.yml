@@ -1,0 +1,19 @@
+name: APEXEvents
+version: 1.0.0
+main: com.apexsmp.events.ApexEventsPlugin
+api-version: '1.21.11'
+description: APEX SMP countdown, PvP unlock, border event and End portal activation.
+author: APEX SMP
+commands:
+  start:
+    description: Starts the APEX SMP event.
+    usage: /start
+    permission: apexevents.admin
+  event:
+    description: Manage the APEX SMP event.
+    usage: /event <status|reset|scan>
+    permission: apexevents.admin
+permissions:
+  apexevents.admin:
+    description: Allows managing APEX SMP events.
+    default: op
