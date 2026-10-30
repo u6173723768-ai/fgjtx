@@ -22,21 +22,23 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "9.2.1"
-      - name: Build both plugins
+      - name: Build all APEX plugins
         working-directory: ApexSMP
-        run: gradle --no-daemon clean :ApexEvents:build :ApexAccess:build --stacktrace
+        run: gradle --no-daemon clean :ApexEvents:build :ApexAccess:build :ApexReset:build --stacktrace
       - name: Verify plugin jars
         run: |
-          test -f ApexSMP/ApexEvents/build/libs/APEX-Events-1.0.1.jar
-          test -f ApexSMP/ApexAccess/build/libs/APEX-Access-1.0.1.jar
-          jar tf ApexSMP/ApexEvents/build/libs/APEX-Events-1.0.1.jar | grep -E 'plugin.yml|com/apexsmp/events/ApexEventsPlugin.class'
-          jar tf ApexSMP/ApexAccess/build/libs/APEX-Access-1.0.1.jar | grep -E 'plugin.yml|config.yml|com/apexsmp/access/ApexAccessPlugin.class'
-          unzip -p ApexSMP/ApexAccess/build/libs/APEX-Access-1.0.1.jar plugin.yml | grep -A4 '^commands:'
+          test -f ApexSMP/ApexEvents/build/libs/APEX-Events-1.0.2.jar
+          test -f ApexSMP/ApexAccess/build/libs/APEX-Access-1.0.2.jar
+          test -f ApexSMP/ApexReset/build/libs/APEX-Reset-1.0.0.jar
+          jar tf ApexSMP/ApexEvents/build/libs/APEX-Events-1.0.2.jar | grep -E 'plugin.yml|com/apexsmp/events/ApexEventsPlugin.class'
+          jar tf ApexSMP/ApexAccess/build/libs/APEX-Access-1.0.2.jar | grep -E 'plugin.yml|config.yml|com/apexsmp/access/ApexAccessPlugin.class'
+          jar tf ApexSMP/ApexReset/build/libs/APEX-Reset-1.0.0.jar | grep -E 'plugin.yml|com/apexsmp/reset/ApexResetPlugin.class'
       - uses: actions/upload-artifact@v4
         with:
           name: apex-smp-paper-1.21.11
           path: |
-            ApexSMP/ApexEvents/build/libs/APEX-Events-1.0.1.jar
-            ApexSMP/ApexAccess/build/libs/APEX-Access-1.0.1.jar
+            ApexSMP/ApexEvents/build/libs/APEX-Events-1.0.2.jar
+            ApexSMP/ApexAccess/build/libs/APEX-Access-1.0.2.jar
+            ApexSMP/ApexReset/build/libs/APEX-Reset-1.0.0.jar
           if-no-files-found: error
           retention-days: 14
