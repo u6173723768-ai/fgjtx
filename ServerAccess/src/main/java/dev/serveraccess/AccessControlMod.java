@@ -12,7 +12,6 @@ import net.minecraft.command.permission.PermissionLevel;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerLoginNetworkHandler;
 import net.minecraft.text.Text;
 
 public final class AccessControlMod implements ModInitializer {
@@ -26,7 +25,8 @@ public final class AccessControlMod implements ModInitializer {
         });
 
         ServerLoginConnectionEvents.QUERY_START.register((handler, server, sender, synchronizer) -> {
-            GameProfile profile = ((ServerLoginNetworkHandlerAccessor) (Object) handler).serveraccess$getProfile();
+            // The access widener exposes the authenticated GameProfile on the login handler.
+            GameProfile profile = handler.profile;
             String username = profile == null ? null : profile.name();
 
             if (username == null || !state(server).isAllowed(username)) {
