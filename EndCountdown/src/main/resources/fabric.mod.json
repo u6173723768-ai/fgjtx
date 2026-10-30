@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "endcountdown",
+  "version": "${version}",
+  "name": "End Countdown",
+  "description": "A server-wide two-day countdown, border event, PvP protection and End portal activation.",
+  "authors": ["WorldEvent"],
+  "environment": "*",
+  "entrypoints": {
+    "main": ["dev.worldevent.EndCountdownMod"]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
