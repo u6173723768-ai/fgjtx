@@ -1,0 +1,6 @@
+name: APEXAccess
+version: 1.0.0
+main: com.apexsmp.access.ApexAccessPlugin
+api-version: '1.21.11'
+description: APEX SMP allowlist and operator promotion using //op.
+author: APEX SMP
