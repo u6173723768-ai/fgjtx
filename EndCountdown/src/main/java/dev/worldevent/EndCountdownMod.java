@@ -71,7 +71,7 @@ public final class EndCountdownMod implements ModInitializer {
             EventState state = state(server);
             long now = System.currentTimeMillis();
             updateBar(state, now);
-            if (state.portalsUnlocked(now) && handler.player.getWorld() == server.getOverworld()) {
+            if (state.portalsUnlocked(now) && handler.player.getEntityWorld() == server.getOverworld()) {
                 queuePlayerArea(server.getOverworld(), handler.player);
             }
         });
@@ -83,7 +83,7 @@ public final class EndCountdownMod implements ModInitializer {
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, damageSource, amount) -> {
             if (!(entity instanceof ServerPlayerEntity victim)) return true;
             if (!(damageSource.getAttacker() instanceof PlayerEntity attacker) || attacker == victim) return true;
-            MinecraftServer server = victim.getServer();
+            MinecraftServer server = victim.getEntityWorld().getServer();
             return server == null || state(server).pvpEnabled(System.currentTimeMillis());
         });
 
@@ -227,7 +227,7 @@ public final class EndCountdownMod implements ModInitializer {
     }
 
     private static void setBorder(MinecraftServer server, double size) {
-        BlockPos spawn = server.getOverworld().getSpawnPos();
+        BlockPos spawn = server.getOverworld().getSpawnPoint().getPos();
         double x = spawn.getX() + 0.5;
         double z = spawn.getZ() + 0.5;
         for (ServerWorld world : server.getWorlds()) {
@@ -241,7 +241,7 @@ public final class EndCountdownMod implements ModInitializer {
         int added = 0;
         ServerWorld overworld = server.getOverworld();
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            if (player.getWorld() == overworld) added += queuePlayerArea(overworld, player);
+            if (player.getEntityWorld() == overworld) added += queuePlayerArea(overworld, player);
         }
         return added;
     }
@@ -288,7 +288,7 @@ public final class EndCountdownMod implements ModInitializer {
         BlockPos.Mutable cursor = new BlockPos.Mutable();
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
-                for (int y = world.getBottomY(); y < world.getTopY(); y++) {
+                for (int y = world.getBottomY(); y < (world.getBottomY() + world.getHeight()); y++) {
                     cursor.set(startX + x, y, startZ + z);
                     if (chunk.getBlockState(cursor).isOf(Blocks.END_PORTAL_FRAME)) {
                         if (activatePortal(world, cursor.toImmutable())) count++;
