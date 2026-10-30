@@ -1,0 +1,9 @@
+name: APEXReset
+version: 1.0.0
+main: com.apexsmp.reset.ApexResetPlugin
+api-version: '1.21.11'
+description: OP-only APEX SMP fresh-season restart.
+author: APEX SMP
+depend:
+  - APEXAccess
+  - APEXEvents
