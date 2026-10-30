@@ -4,7 +4,7 @@ Target server: Paper 1.21.11, Java 21.
 
 This project builds two separate plugins:
 
-- **APEX-Events.jar** — small waiting border, `/start`, 30-minute PvP delay, two-day portal countdown, boss bar, and loaded-chunk End portal activation.
+- **APEX-Events.jar** — 16-block waiting border, 100,000-block event border, `/start`, 30-minute PvP delay, two-day portal countdown, boss bar, and loaded-chunk End portal activation.
 - **APEX-Access.jar** — persistent allowlist. `Hannes_mini` is automatically allowed. The custom `//op <username>` command is only accepted from an existing server operator. It allowlists the target and grants operator status immediately if online, or when they first join if offline.
 
 There is deliberately no `/allow` command. The custom `//op` command is the route used to add and promote new players.
@@ -21,7 +21,7 @@ Players do not install these plugins on their own clients.
 
 ## APEX Events commands
 
-- `/start` — expands the world border to 30,000,000 blocks and starts the timers.
+- `/start` — expands the world border to 100,000 blocks and starts the timers.
 - `/event status` — shows timer and PvP/portal state.
 - `/event reset` — resets the event and restores the 16-block waiting border.
 - `/event scan` — after the two-day timer, queues currently loaded Overworld chunks for scanning.
