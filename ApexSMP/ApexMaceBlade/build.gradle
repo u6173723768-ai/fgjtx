@@ -1,0 +1,5 @@
+base {
+    archivesName = 'APEX-MaceBlade'
+}
+
+version = '1.0.0'
