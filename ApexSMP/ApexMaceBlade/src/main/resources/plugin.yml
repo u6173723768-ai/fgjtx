@@ -1,0 +1,15 @@
+name: APEXMaceBlade
+version: 1.0.0
+main: com.apexsmp.maceblade.ApexMaceBladePlugin
+api-version: '1.21.11'
+description: Adds the custom APEX SMP sword named "the mace blade".
+author: APEX SMP
+commands:
+  maceblade:
+    description: Manage the mace blade.
+    usage: /maceblade give <player>
+    permission: apexmaceblade.admin
+permissions:
+  apexmaceblade.admin:
+    description: Allows giving the mace blade.
+    default: op
