@@ -10,7 +10,6 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -69,10 +68,6 @@ public final class ApexMaceBladePlugin extends JavaPlugin implements Listener {
 
         meta.getPersistentDataContainer().set(itemKey, PersistentDataType.BYTE, (byte) 1);
         item.setItemMeta(meta);
-
-        item.addUnsafeEnchantment(Enchantment.WIND_BURST, 3);
-        item.addUnsafeEnchantment(Enchantment.DENSITY, 5);
-        item.addUnsafeEnchantment(Enchantment.BREACH, 4);
 
         return item;
     }
