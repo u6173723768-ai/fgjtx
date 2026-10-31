@@ -17,7 +17,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.ShapelessRecipe;
+import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -188,10 +188,15 @@ public final class ApexMaceBladePlugin extends JavaPlugin implements Listener {
     private void registerRecipe() {
         Bukkit.removeRecipe(recipeKey);
 
-        ShapelessRecipe recipe = new ShapelessRecipe(recipeKey, createMaceBlade());
-        recipe.addIngredient(Material.NETHERITE_SWORD);
-        recipe.addIngredient(Material.HEAVY_CORE);
-        recipe.addIngredient(2, Material.BREEZE_ROD);
+        ShapedRecipe recipe = new ShapedRecipe(recipeKey, createMaceBlade());
+        recipe.shape(
+                " T ",
+                " H ",
+                " S "
+        );
+        recipe.setIngredient('T', Material.TOTEM_OF_UNDYING);
+        recipe.setIngredient('H', Material.HEAVY_CORE);
+        recipe.setIngredient('S', Material.STICK);
 
         Bukkit.addRecipe(recipe);
     }
