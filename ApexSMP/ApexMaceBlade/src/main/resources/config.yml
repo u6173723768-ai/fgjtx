@@ -1,0 +1,8 @@
+smash:
+  minimum-fall-distance: 1.5
+  damage-per-block: 2.5
+  maximum-bonus-damage: 40.0
+  knockback-strength: 1.15
+
+crafting:
+  enabled: true
