@@ -10,12 +10,16 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -28,6 +32,7 @@ import java.util.List;
 public final class ApexMaceBladePlugin extends JavaPlugin implements Listener {
     private NamespacedKey itemKey;
     private NamespacedKey recipeKey;
+    private AttributeModifier healthModifier;
 
     @Override
     public void onEnable() {
@@ -35,8 +40,18 @@ public final class ApexMaceBladePlugin extends JavaPlugin implements Listener {
 
         itemKey = new NamespacedKey(this, "the_mace_blade");
         recipeKey = new NamespacedKey(this, "the_mace_blade_recipe");
+        NamespacedKey healthModifierKey = new NamespacedKey(this, "mace_blade_extra_hearts");
+        healthModifier = new AttributeModifier(
+                healthModifierKey,
+                getConfig().getDouble("health-bonus", 4.0),
+                AttributeModifier.Operation.ADD_NUMBER
+        );
 
         getServer().getPluginManager().registerEvents(this, this);
+
+        // Recheck inventory possession so swapping, picking up, dropping, or losing
+        // the item always updates the temporary health bonus.
+        Bukkit.getScheduler().runTaskTimer(this, this::updateAllPlayerHealthBonuses, 1L, 10L);
 
         if (getCommand("maceblade") == null) {
             throw new IllegalStateException("/maceblade is missing from plugin.yml");
@@ -48,6 +63,55 @@ public final class ApexMaceBladePlugin extends JavaPlugin implements Listener {
         }
 
         getLogger().info("APEX Mace Blade 1.0.0 enabled.");
+    }
+
+    private void updateAllPlayerHealthBonuses() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            updatePlayerHealthBonus(player);
+        }
+    }
+
+    private void updatePlayerHealthBonus(Player player) {
+        AttributeInstance maxHealth = player.getAttribute(Attribute.MAX_HEALTH);
+        if (maxHealth == null) {
+            return;
+        }
+
+        boolean hasBlade = hasMaceBladeInInventory(player);
+        boolean bonusApplied = maxHealth.getModifiers().contains(healthModifier);
+
+        if (hasBlade && !bonusApplied) {
+            maxHealth.addModifier(healthModifier);
+        } else if (!hasBlade && bonusApplied) {
+            maxHealth.removeModifier(healthModifier);
+            if (player.getHealth() > maxHealth.getValue()) {
+                player.setHealth(maxHealth.getValue());
+            }
+        }
+    }
+
+    private boolean hasMaceBladeInInventory(Player player) {
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (isMaceBlade(item)) {
+                return true;
+            }
+        }
+
+        for (ItemStack item : player.getInventory().getArmorContents()) {
+            if (isMaceBlade(item)) {
+                return true;
+            }
+        }
+
+        return isMaceBlade(player.getInventory().getItemInOffHand());
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        AttributeInstance maxHealth = event.getPlayer().getAttribute(Attribute.MAX_HEALTH);
+        if (maxHealth != null && maxHealth.getModifiers().contains(healthModifier)) {
+            maxHealth.removeModifier(healthModifier);
+        }
     }
 
     private ItemStack createMaceBlade() {
