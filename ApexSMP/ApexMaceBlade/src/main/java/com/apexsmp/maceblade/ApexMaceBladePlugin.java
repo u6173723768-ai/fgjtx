@@ -51,7 +51,7 @@ public final class ApexMaceBladePlugin extends JavaPlugin implements Listener {
     }
 
     private ItemStack createMaceBlade() {
-        ItemStack item = new ItemStack(Material.NETHERITE_SWORD);
+        ItemStack item = new ItemStack(Material.MACE);
         ItemMeta meta = item.getItemMeta();
 
         meta.displayName(
@@ -62,9 +62,11 @@ public final class ApexMaceBladePlugin extends JavaPlugin implements Listener {
         meta.lore(List.of(
                 Component.text("A sword with the force of a mace.", NamedTextColor.GRAY)
                         .decoration(TextDecoration.ITALIC, false),
-                Component.text("Fall farther. Hit harder.", NamedTextColor.DARK_GRAY)
+                Component.text("Supports Wind Burst, Density and Breach.", NamedTextColor.DARK_GRAY)
                         .decoration(TextDecoration.ITALIC, false)
         ));
+
+        meta.setItemModel(NamespacedKey.minecraft("netherite_sword"));
 
         meta.getPersistentDataContainer().set(itemKey, PersistentDataType.BYTE, (byte) 1);
         item.setItemMeta(meta);
@@ -73,7 +75,7 @@ public final class ApexMaceBladePlugin extends JavaPlugin implements Listener {
     }
 
     private boolean isMaceBlade(ItemStack item) {
-        if (item == null || item.getType() != Material.NETHERITE_SWORD || !item.hasItemMeta()) {
+        if (item == null || item.getType() != Material.MACE || !item.hasItemMeta()) {
             return false;
         }
 
