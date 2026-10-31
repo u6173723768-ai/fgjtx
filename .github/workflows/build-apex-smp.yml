@@ -30,7 +30,6 @@ jobs:
           test -f ApexSMP/ApexEvents/build/libs/APEX-Events-1.0.2.jar
           test -f ApexSMP/ApexAccess/build/libs/APEX-Access-1.0.2.jar
           test -f ApexSMP/ApexReset/build/libs/APEX-Reset-1.0.0.jar
-            ApexSMP/ApexMaceBlade/build/libs/APEX-MaceBlade-1.0.0.jar
           test -f ApexSMP/ApexMaceBlade/build/libs/APEX-MaceBlade-1.0.0.jar
           jar tf ApexSMP/ApexEvents/build/libs/APEX-Events-1.0.2.jar | grep -E 'plugin.yml|com/apexsmp/events/ApexEventsPlugin.class'
           jar tf ApexSMP/ApexAccess/build/libs/APEX-Access-1.0.2.jar | grep -E 'plugin.yml|config.yml|com/apexsmp/access/ApexAccessPlugin.class'
@@ -43,5 +42,6 @@ jobs:
             ApexSMP/ApexEvents/build/libs/APEX-Events-1.0.2.jar
             ApexSMP/ApexAccess/build/libs/APEX-Access-1.0.2.jar
             ApexSMP/ApexReset/build/libs/APEX-Reset-1.0.0.jar
+            ApexSMP/ApexMaceBlade/build/libs/APEX-MaceBlade-1.0.0.jar
           if-no-files-found: error
           retention-days: 14
