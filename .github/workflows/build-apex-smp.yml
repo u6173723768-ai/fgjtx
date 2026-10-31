@@ -24,15 +24,18 @@ jobs:
           gradle-version: "9.2.1"
       - name: Build all APEX plugins
         working-directory: ApexSMP
-        run: gradle --no-daemon clean :ApexEvents:build :ApexAccess:build :ApexReset:build --stacktrace
+        run: gradle --no-daemon clean :ApexEvents:build :ApexAccess:build :ApexReset:build :ApexMaceBlade:build --stacktrace
       - name: Verify plugin jars
         run: |
           test -f ApexSMP/ApexEvents/build/libs/APEX-Events-1.0.2.jar
           test -f ApexSMP/ApexAccess/build/libs/APEX-Access-1.0.2.jar
           test -f ApexSMP/ApexReset/build/libs/APEX-Reset-1.0.0.jar
+            ApexSMP/ApexMaceBlade/build/libs/APEX-MaceBlade-1.0.0.jar
+          test -f ApexSMP/ApexMaceBlade/build/libs/APEX-MaceBlade-1.0.0.jar
           jar tf ApexSMP/ApexEvents/build/libs/APEX-Events-1.0.2.jar | grep -E 'plugin.yml|com/apexsmp/events/ApexEventsPlugin.class'
           jar tf ApexSMP/ApexAccess/build/libs/APEX-Access-1.0.2.jar | grep -E 'plugin.yml|config.yml|com/apexsmp/access/ApexAccessPlugin.class'
           jar tf ApexSMP/ApexReset/build/libs/APEX-Reset-1.0.0.jar | grep -E 'plugin.yml|com/apexsmp/reset/ApexResetPlugin.class'
+          jar tf ApexSMP/ApexMaceBlade/build/libs/APEX-MaceBlade-1.0.0.jar | grep -E 'plugin.yml|com/apexsmp/maceblade/ApexMaceBladePlugin.class'
       - uses: actions/upload-artifact@v4
         with:
           name: apex-smp-paper-1.21.11
