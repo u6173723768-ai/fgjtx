@@ -1,2 +1,2 @@
 rootProject.name = 'ApexSMP'
-include 'ApexEvents', 'ApexAccess', 'ApexReset'
+include 'ApexEvents', 'ApexAccess', 'ApexReset', 'ApexMaceBlade'
