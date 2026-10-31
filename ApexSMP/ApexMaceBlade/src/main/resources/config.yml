@@ -4,5 +4,7 @@ smash:
   maximum-bonus-damage: 40.0
   knockback-strength: 1.15
 
+health-bonus: 4.0 # +4 health points = 2 extra hearts while the player carries the blade
+
 crafting:
   enabled: true
