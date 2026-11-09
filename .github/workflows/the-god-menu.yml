@@ -1,0 +1,70 @@
+name: Build The God Menu
+on:
+  push:
+    branches: [ the-god-menu-build ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.2.1'
+
+      - name: Reconstruct source project
+        shell: bash
+        run: |
+          cat .build-payload/tar0{1,2,3,4,5}.b64 | base64 --decode | tar -xz
+          test -f TheGodMenu/build.gradle
+          test -f TheGodMenu/src/main/resources/fabric.mod.json
+
+      - name: Build and verify Free production JAR
+        run: gradle --no-daemon -p TheGodMenu clean verifyEdition -Pedition=free --stacktrace
+
+      - name: Upload Free JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-God-menu-Free-1.21.11
+          path: TheGodMenu/build/libs/The-God-menu-Free-1.21.11.jar
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Build and verify Premium production JAR
+        run: gradle --no-daemon -p TheGodMenu clean verifyEdition -Pedition=premium --stacktrace
+
+      - name: Upload Premium JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-God-menu-Premium-1.21.11
+          path: TheGodMenu/build/libs/The-God-menu-Premium-1.21.11.jar
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Package source
+        run: |
+          cd TheGodMenu
+          zip -qr ../TheGodMenu-Source.zip . -x 'build/*' '.gradle/*'
+
+      - name: Upload source ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: TheGodMenu-Source
+          path: TheGodMenu-Source.zip
+          if-no-files-found: error
+          retention-days: 14
