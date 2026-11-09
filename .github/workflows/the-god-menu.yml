@@ -56,6 +56,9 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Generate Gradle wrapper for the source package
+        run: gradle --no-daemon -p TheGodMenu wrapper --gradle-version 9.2.1
+
       - name: Package source
         run: |
           cd TheGodMenu
