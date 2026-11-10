@@ -22,6 +22,11 @@ jobs:
           echo "13fc5920dc5768c16901c099801561f7f40a9a4d53c2614b81ef3917c3bf2f35  godmenu-source.zip" | sha256sum -c -
           mkdir godmenu_impl
           unzip -q godmenu-source.zip -d godmenu_impl
+          sed -i 's/player\.jump();/player.setDeltaMovement(player.getDeltaMovement().x, 0.42, player.getDeltaMovement().z);/g' godmenu_impl/src/main/java/dev/thegodmenu/module/ModuleRegistry.java
+          if grep -n 'player\.jump()' godmenu_impl/src/main/java/dev/thegodmenu/module/ModuleRegistry.java; then
+            echo "Unsupported jump() call remains" >&2
+            exit 1
+          fi
 
       - name: Set up Java 21
         uses: actions/setup-java@v4
