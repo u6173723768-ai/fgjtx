@@ -1,0 +1,68 @@
+name: Build The God menu
+on:
+  push:
+    branches:
+      - godmenu-build-20261110
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source bundle
+        uses: actions/checkout@v4
+
+      - name: Reassemble exact source archive
+        shell: bash
+        run: |
+          cat godmenu-build/source.01.b64 godmenu-build/source.02.b64 godmenu-build/source.03.b64 | base64 -d > godmenu-source.zip
+          echo "13fc5920dc5768c16901c099801561f7f40a9a4d53c2614b81ef3917c3bf2f35  godmenu-source.zip" | sha256sum -c -
+          mkdir godmenu_impl
+          unzip -q godmenu-source.zip -d godmenu_impl
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle 9.2.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.2.1'
+
+      - name: Build and verify Free edition
+        working-directory: godmenu_impl
+        shell: bash
+        run: |
+          gradle --no-daemon --stacktrace clean remapJar verifyEdition -Pedition=free
+          mkdir -p dist
+          cp build/libs/The-God-menu-Free-1.21.11.jar dist/
+
+      - name: Build and verify Premium edition
+        working-directory: godmenu_impl
+        shell: bash
+        run: |
+          gradle --no-daemon --stacktrace clean remapJar verifyEdition -Pedition=premium
+          cp build/libs/The-God-menu-Premium-1.21.11.jar dist/
+
+      - name: Verify edition markers and JAR integrity
+        working-directory: godmenu_impl
+        shell: bash
+        run: |
+          test "$(unzip -p dist/The-God-menu-Free-1.21.11.jar thegodmenu-edition.txt | tr -d '\r\n')" = "free"
+          test "$(unzip -p dist/The-God-menu-Premium-1.21.11.jar thegodmenu-edition.txt | tr -d '\r\n')" = "premium"
+          unzip -t dist/The-God-menu-Free-1.21.11.jar
+          unzip -t dist/The-God-menu-Premium-1.21.11.jar
+          ls -lh dist/
+
+      - name: Upload both production JARs
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-God-menu-1.21.11
+          path: godmenu_impl/dist/*.jar
+          if-no-files-found: error
+          compression-level: 0
