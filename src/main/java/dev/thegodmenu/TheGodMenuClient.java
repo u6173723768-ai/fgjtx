@@ -100,7 +100,7 @@ public final class TheGodMenuClient implements ClientModInitializer {
 
         openMenuKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "key.thegodmenu.open_menu",
-                net.minecraft.client.input.InputConstants.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_RIGHT_SHIFT,
                 keyCategory
         ));
@@ -248,7 +248,6 @@ public final class TheGodMenuClient implements ClientModInitializer {
         int y = 8;
         int lineHeight = enabled("compact_hud") ? 11 : 13;
         int textColor = 0xFFF2F0FF;
-        int shadowColor = 0xB5000000;
 
         if (enabled("watermark")) {
             graphics.drawString(client.font, "THE GOD MENU  •  " + edition.toUpperCase(Locale.ROOT), x, y, 0xFFFF8B4A, true);
@@ -296,8 +295,5 @@ public final class TheGodMenuClient implements ClientModInitializer {
             }
         }
 
-        if (y > 8) {
-            graphics.fill(4, 4, 170, y + 3, shadowColor);
-        }
     }
 }
