@@ -34,6 +34,13 @@ jobs:
           test -f TheGodMenu/build.gradle
           test -f TheGodMenu/src/main/resources/fabric.mod.json
 
+      - name: Apply module and HUD update
+        run: |
+          base64 --decode .build-payload/godmenu-modules-patch.b64 > /tmp/godmenu-modules-patch.zip
+          unzip -oq /tmp/godmenu-modules-patch.zip -d TheGodMenu
+          grep -q 'coordinates_hud' TheGodMenu/src/main/java/dev/thegodmenu/module/ModuleRegistry.java
+          grep -q 'armor_hud' TheGodMenu/src/main/java/dev/thegodmenu/module/ModuleRegistry.java
+
       - name: Build and verify Free production JAR
         run: gradle --no-daemon -p TheGodMenu clean verifyEdition -Pedition=free --stacktrace
 
