@@ -45,6 +45,71 @@ tasks.named("remapJar") {
     archiveFileName = "${project.archives_base_name}-${project.mod_version}.jar"
 }
 
+tasks.register("packageEditions") {
+    group = "build"
+    description = "Creates separately branded Free and Premium JARs from the remapped client."
+
+    dependsOn tasks.named("remapJar")
+
+    doLast {
+        def inputJar = tasks.named("remapJar").get().archiveFile.get().asFile
+        def outputDir = layout.buildDirectory.dir("libs").get().asFile
+        outputDir.mkdirs()
+
+        def makeEdition = { String edition, String outputName ->
+            def outputJar = new File(outputDir, outputName)
+            def zipFile = new java.util.zip.ZipFile(inputJar)
+            def zipOut = new java.util.zip.ZipOutputStream(new FileOutputStream(outputJar))
+
+            try {
+                def entries = zipFile.entries()
+                while (entries.hasMoreElements()) {
+                    def entry = entries.nextElement()
+                    if (entry.name == "thegodmenu-edition.properties") {
+                        continue
+                    }
+
+                    def copy = new java.util.zip.ZipEntry(entry.name)
+                    if (entry.time > 0) copy.time = entry.time
+                    zipOut.putNextEntry(copy)
+                    if (!entry.directory) {
+                        zipFile.getInputStream(entry).withCloseable { stream ->
+                            stream.transferTo(zipOut)
+                        }
+                    }
+                    zipOut.closeEntry()
+                }
+
+                zipOut.putNextEntry(new java.util.zip.ZipEntry("thegodmenu-edition.properties"))
+                zipOut.write(("edition=${edition}\n").getBytes("UTF-8"))
+                zipOut.closeEntry()
+            } finally {
+                zipOut.close()
+                zipFile.close()
+            }
+
+            println("Created ${outputJar.name} (${edition})")
+        }
+
+        makeEdition("free", "The-God-menu-Free-1.21.11.jar")
+        makeEdition("premium", "The-God-menu-Premium-1.21.11.jar")
+    }
+}
+
+tasks.register("sourceZip", Zip) {
+    group = "build"
+    description = "Packages the complete source project."
+    archiveFileName = "TheGodMenu-Source.zip"
+    destinationDirectory = layout.buildDirectory.dir("distributions")
+    from("src")
+    from("build.gradle")
+    from("settings.gradle")
+    from("gradle.properties")
+    from("README.md")
+    from("LICENSE")
+}
+
 tasks.named("build") {
     dependsOn tasks.named("remapJar")
+    dependsOn tasks.named("packageEditions")
 }
