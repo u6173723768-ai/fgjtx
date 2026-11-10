@@ -1,13 +1,15 @@
 {
   "schemaVersion": 1,
-  "id": "media_client",
+  "id": "thegodmenu",
   "version": "${version}",
-  "name": "Media Client",
-  "description": "Media Client",
-  "authors": ["Media Client"],
+  "name": "The GOD MENU",
+  "description": "A client-side utility menu with movement helpers, visual options and HUD modules.",
+  "authors": ["The GOD MENU"],
   "license": "MIT",
   "environment": "client",
-  "entrypoints": { "client": ["com.mediaclient.MediaClient"] },
+  "entrypoints": {
+    "client": ["dev.thegodmenu.TheGodMenuClient"]
+  },
   "depends": {
     "fabricloader": ">=0.18.1",
     "minecraft": "1.21.11",
